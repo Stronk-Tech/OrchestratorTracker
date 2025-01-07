@@ -162,11 +162,11 @@ async function recoverStorage(initPrometheus) {
   console.log("Initialized Prometheus state.");
 }
 
-function writeToStorage(key, data) {
+async function writeToStorage(key, data) {
   try {
     const serialized = JSON.stringify(data);
-    if (!serialized) throw new Error("Invalid JSON data");
-    storage.setItem(key, JSON.parse(serialized));
+    if (!serialized || !serialized.length) throw new Error("Invalid JSON data");
+    await storage.setItem(key, JSON.parse(serialized));
     console.log(`Stored data for key: ${key}`);
   } catch (err) {
     console.error(`Error writing to storage for key: ${key}`, err.message);
