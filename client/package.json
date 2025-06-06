@@ -15,13 +15,13 @@
   "author": "Marco van Dijk",
   "license": "WTFPL",
   "dependencies": {
-    "@grpc/grpc-js": "^1.6.8",
+    "@grpc/grpc-js": "^1.13.0",
     "@grpc/proto-loader": "^0.7.0",
     "geoip-lite": "^1.4.10",
-    "graphql": "^16.5.0",
-    "graphql-request": "^4.3.0"
+    "graphql": "^16.11.0",
+    "graphql-request": "^7.2.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.10"
+    "nodemon": "^3.1.0"
   }
 }

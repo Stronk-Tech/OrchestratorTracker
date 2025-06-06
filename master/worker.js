@@ -1,7 +1,7 @@
 const { parentPort } = require("worker_threads");
 const client = require("prom-client");
-const storage = require("node-persist");
-const ethers = require("ethers");
+const Storage = require("./src/storage.js");
+const { JsonRpcProvider } = require("ethers");
 const {
   CONF_API_L1_HTTP,
   CONF_API_L1_KEY,
@@ -12,8 +12,11 @@ const {
 } = require("./src/config.js");
 const taskQueue = [];
 
+// Initialize Storage
+const storage = new Storage();
+
 // Initialize Ethereum Provider
-const l1provider = new ethers.providers.JsonRpcProvider(
+const l1provider = new JsonRpcProvider(
   CONF_API_L1_HTTP + CONF_API_L1_KEY
 );
 
@@ -91,11 +94,11 @@ function sleep(ms) {
 // Recover persistent storage
 async function recoverStorage(initPrometheus) {
   console.log("Retrieving state from storage.");
-  storedDomains = await storage.getItem("ensDomainCache");
+  const storedDomains = await storage.getItem("ensDomainCache");
   if (storedDomains) {
     ensDomainCache = storedDomains;
   }
-  storedOrchs = await storage.getItem("orchCache");
+  const storedOrchs = await storage.getItem("orchCache");
   if (storedOrchs) {
     orchCache = storedOrchs;
   }
@@ -164,9 +167,7 @@ async function recoverStorage(initPrometheus) {
 
 async function writeToStorage(key, data) {
   try {
-    const serialized = JSON.stringify(data);
-    if (!serialized || !serialized.length) throw new Error("Invalid JSON data");
-    await storage.setItem(key, JSON.parse(serialized));
+    await storage.setItem(key, data);
     console.log(`Stored data for key: ${key}`);
   } catch (err) {
     console.error(`Error writing to storage for key: ${key}`, err.message);
@@ -174,23 +175,19 @@ async function writeToStorage(key, data) {
   }
 }
 
-async function flushCachesToStorage() {
-  try {
-    if (staleENSCache) {
-      writeToStorage("ensDomainCache", ensDomainCache);
-    }
-    if (staleOrchCache) {
-      writeToStorage("orchCache", orchCache);
-    }
-    console.log("Flushed caches to storage.");
-  } catch (err) {
-    console.error("Error flushing caches to storage:", err.message);
-  }
-}
-
 process.on("SIGINT", async () => {
   console.log("Shutting down worker...");
-  await flushCachesToStorage();
+  if (staleENSCache) {
+    console.log("Writing ENS cache to storage...");
+    await writeToStorage("ensDomainCache", ensDomainCache);
+    staleENSCache = false;
+  }
+  if (staleOrchCache) {
+    console.log("Writing orchestrator cache to storage...");
+    await writeToStorage("orchCache", orchCache);
+    staleOrchCache = false;
+  }
+  storage.close();
   process.exit();
 });
 
@@ -662,15 +659,7 @@ parentPort.on("message", async (message) => {
 // Initialize and Start Worker
 (async () => {
   console.log("Opening storage.");
-  await storage.init({
-    stringify: JSON.stringify,
-    parse: JSON.parse,
-    encoding: "utf8",
-    logging: false,
-    ttl: false,
-    forgiveParseErrors: false,
-  });
-  recoverStorage(true);
+  await recoverStorage(true);
   console.log("Worker initialized.");
   runTests();
   processQueue();

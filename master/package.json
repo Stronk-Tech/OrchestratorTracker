@@ -15,13 +15,13 @@
   "author": "Marco van Dijk",
   "license": "WTFPL",
   "dependencies": {
-    "ethers": "5.7.2",
-    "express": "^4.17.1",
-    "node-persist": "^4.0.3",
-    "npm": "^8.5.2",
-    "prom-client": "^14.0.1"
+    "better-sqlite3": "^11.10.0",
+    "ethers": "^6.14.0",
+    "express": "^5.1.0",
+    "prom-client": "^15.1.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.10"
+    "nodemon": "^3.1.0",
+    "npm": "^11.4.0"
   }
 }
